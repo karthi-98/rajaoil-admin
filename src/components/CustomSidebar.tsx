@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Package, ChevronRight, Droplet, LogOut, Settings, ShoppingBag } from "lucide-react"
+import { Package, ChevronRight, Droplet, LogOut, Settings, ShoppingBag, MessageSquare } from "lucide-react"
 import gsap from "gsap"
 import { useAuth } from "@/contexts/AuthContext"
 import { usePathname, useRouter } from "next/navigation"
@@ -17,6 +17,11 @@ const menuItems = [
     title: "Orders",
     icon: ShoppingBag,
     href: "/orders",
+  },
+  {
+    title: "Contact Forms",
+    icon: MessageSquare,
+    href: "/contact-forms",
   },
   {
     title: "Others",
@@ -160,18 +165,18 @@ export function CustomSidebar() {
                 <li key={item.title}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 h-11 px-3 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 h-10 px-3 rounded-lg transition-colors ${
                       isActive
-                        ? "text-gray-900 bg-gray-100"
-                        : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                        ? "text-gray-900 "
+                        : "text-gray-400 hover:text-gray-900 hover:bg-gray-50"
                     }`}
                   >
-                    <item.icon className="h-5 w-5 flex-shrink-0" strokeWidth={1.5} />
+                    <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
                     <span
                       ref={(el) => {
                         textRefs.current[index] = el
                       }}
-                      className="text-[15px] whitespace-nowrap overflow-hidden"
+                      className="text-[13px] whitespace-nowrap overflow-hidden"
                       style={{ opacity: 1 }}
                     >
                       {item.title}

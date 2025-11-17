@@ -17,6 +17,7 @@ export default function OrdersPage() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
@@ -59,6 +60,12 @@ export default function OrdersPage() {
 
   const handleSearch = () => {
     fetchOrders()
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await fetchOrders()
+    setIsRefreshing(false)
   }
 
   const handleViewDetails = (order: Order) => {
@@ -128,8 +135,13 @@ export default function OrdersPage() {
                 </SelectContent>
               </Select>
 
-              <Button onClick={fetchOrders} variant="outline" size="icon">
-                <RefreshCw className="h-4 w-4" />
+              <Button
+                onClick={handleRefresh}
+                variant="outline"
+                size="icon"
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
