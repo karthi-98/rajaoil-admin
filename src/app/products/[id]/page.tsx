@@ -25,6 +25,7 @@ interface ProductData {
   brand: string
   types: OilType[]
   mainImage?: string
+  category?: string
 }
 
 interface ProductDetailPageProps {
@@ -45,10 +46,12 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [isEditTypeDialogOpen, setIsEditTypeDialogOpen] = useState(false)
   const [editingTypeIndex, setEditingTypeIndex] = useState<number | null>(null)
   const [brands, setBrands] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
 
   // Form state
   const [brand, setBrand] = useState("")
   const [mainImage, setMainImage] = useState("")
+  const [category, setCategory] = useState("")
 
   // New type state
   const [newTypeName, setNewTypeName] = useState("")
@@ -97,15 +100,30 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     }
   }, [])
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const docRef = doc(db, "rajaoil", "others")
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        setCategories(data.category || [])
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchProduct()
     fetchBrands()
-  }, [fetchProduct, fetchBrands])
+    fetchCategories()
+  }, [fetchProduct, fetchBrands, fetchCategories])
 
   const handleEdit = () => {
     if (!product) return
     setBrand(product.brand)
     setMainImage(product.mainImage || "")
+    setCategory(product.category || "")
     setIsEditBrandDialogOpen(true)
   }
 
@@ -116,9 +134,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       const productRef = doc(db, "rajaoil", productId)
       await updateDoc(productRef, {
         brand,
-        mainImage: mainImage || ""
+        mainImage: mainImage || "",
+        category: category || ""
       })
-      setProduct({ ...product, brand, mainImage: mainImage || "" })
+      setProduct({ ...product, brand, mainImage: mainImage || "", category: category || "" })
       setIsEditBrandDialogOpen(false)
     } catch (error) {
       console.error("Error updating product:", error)
@@ -361,7 +380,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
             <DialogDescription>
-              Update the brand and main image for {productId}
+              Update the brand, category and main image for {productId}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -375,6 +394,22 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   {brands.map((brandName) => (
                     <SelectItem key={brandName} value={brandName}>
                       {brandName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((categoryName) => (
+                    <SelectItem key={categoryName} value={categoryName}>
+                      {categoryName}
                     </SelectItem>
                   ))}
                 </SelectContent>

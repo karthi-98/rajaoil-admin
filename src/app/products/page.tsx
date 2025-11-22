@@ -32,17 +32,21 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isAddBrandDialogOpen, setIsAddBrandDialogOpen] = useState(false)
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false)
   const [brands, setBrands] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
 
   // Form state
   const [productName, setProductName] = useState("")
   const [brand, setBrand] = useState("")
   const [oilTypes, setOilTypes] = useState<OilType[]>([{ name: "", price: "", offer: "" }])
   const [newBrandName, setNewBrandName] = useState("")
+  const [newCategoryName, setNewCategoryName] = useState("")
 
   useEffect(() => {
     fetchProducts()
     fetchBrands()
+    fetchCategories()
   }, [])
 
   const fetchProducts = async () => {
@@ -78,6 +82,19 @@ export default function ProductsPage() {
       }
     } catch (error) {
       console.error("Error fetching brands:", error)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const docRef = doc(db, "rajaoil", "others")
+      const docSnap = await getDoc(docRef)
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        setCategories(data.category || [])
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
     }
   }
 
@@ -138,7 +155,7 @@ export default function ProductsPage() {
         updatedBrands = [newBrandName]
       }
 
-      await setDoc(docRef, { brands: updatedBrands })
+      await setDoc(docRef, { brands: updatedBrands }, { merge: true })
       setBrands(updatedBrands)
       setNewBrandName("")
       alert("Brand added successfully!")
@@ -161,13 +178,63 @@ export default function ProductsPage() {
         const updatedBrands = (docSnap.data().brands || []).filter(
           (brand: string) => brand !== brandToDelete
         )
-        await setDoc(docRef, { brands: updatedBrands })
+        await setDoc(docRef, { brands: updatedBrands }, { merge: true })
         setBrands(updatedBrands)
         alert("Brand deleted successfully!")
       }
     } catch (error) {
       console.error("Error deleting brand:", error)
       alert("Failed to delete brand")
+    }
+  }
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) {
+      alert("Please enter a category name")
+      return
+    }
+
+    try {
+      const docRef = doc(db, "rajaoil", "others")
+      const docSnap = await getDoc(docRef)
+
+      let updatedCategories = []
+      if (docSnap.exists()) {
+        updatedCategories = [...(docSnap.data().category || []), newCategoryName]
+      } else {
+        updatedCategories = [newCategoryName]
+      }
+
+      await setDoc(docRef, { category: updatedCategories }, { merge: true })
+      setCategories(updatedCategories)
+      setNewCategoryName("")
+      alert("Category added successfully!")
+    } catch (error) {
+      console.error("Error adding category:", error)
+      alert("Failed to add category")
+    }
+  }
+
+  const handleDeleteCategory = async (categoryToDelete: string) => {
+    if (!confirm(`Are you sure you want to delete "${categoryToDelete}"?`)) {
+      return
+    }
+
+    try {
+      const docRef = doc(db, "rajaoil", "others")
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        const updatedCategories = (docSnap.data().category || []).filter(
+          (category: string) => category !== categoryToDelete
+        )
+        await setDoc(docRef, { category: updatedCategories }, { merge: true })
+        setCategories(updatedCategories)
+        alert("Category deleted successfully!")
+      }
+    } catch (error) {
+      console.error("Error deleting category:", error)
+      alert("Failed to delete category")
     }
   }
 
@@ -187,6 +254,66 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Dialog open={isAddCategoryDialogOpen} onOpenChange={setIsAddCategoryDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add Category
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Manage Categories</DialogTitle>
+                <DialogDescription>
+                  Add new categories or delete existing ones
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category-name">Add New Category</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="category-name"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="e.g., Cooking Oil"
+                    />
+                    <Button onClick={handleAddCategory}>Add</Button>
+                  </div>
+                </div>
+
+                {categories.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Existing Categories</Label>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-md p-2">
+                      {categories.map((category) => (
+                        <div
+                          key={category}
+                          className="flex items-center justify-between p-2 rounded hover:bg-gray-50"
+                        >
+                          <span className="text-sm">{category}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCategory(category)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddCategoryDialogOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           <Dialog open={isAddBrandDialogOpen} onOpenChange={setIsAddBrandDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
