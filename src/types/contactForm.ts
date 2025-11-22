@@ -2,14 +2,17 @@
 export interface ContactForm {
   id: string                              // Firebase document ID
   name: string
-  phone: string
-  subject: string
+  mobile: string
+  email: string
+  product: string
   message: string
-  status: 'new' | 'replied' | 'archived'
-  replied: boolean
-  replyMessage?: string
-  adminNotes?: string
+  status: 'new' | 'contacted' | 'archived'
+  contacted: boolean
+  contactedVia: string
+  adminNotes: string
+  assignedTo: string
   createdAt: string | null               // ISO string from Firebase Timestamp
+  contactedAt: string | null             // ISO string from Firebase Timestamp
   updatedAt: string | null               // ISO string from Firebase Timestamp
 }
 
@@ -17,6 +20,6 @@ export interface ContactForm {
 export interface ContactFormStatistics {
   totalMessages: number
   newMessages: number
-  repliedMessages: number
+  contactedMessages: number
   archivedMessages: number
 }

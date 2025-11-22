@@ -56,14 +56,17 @@ export default function ContactFormsPage() {
         forms.push({
           id: doc.id,
           name: data.name || '',
-          phone: data.phone || '',
-          subject: data.subject || '',
+          mobile: data.mobile || '',
+          email: data.email || '',
+          product: data.product || '',
           message: data.message || '',
           status: data.status || 'new',
-          replied: data.replied || false,
-          replyMessage: data.replyMessage || '',
+          contacted: data.contacted || false,
+          contactedVia: data.contactedVia || '',
           adminNotes: data.adminNotes || '',
+          assignedTo: data.assignedTo || '',
           createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+          contactedAt: data.contactedAt?.toDate?.()?.toISOString() || null,
           updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
         })
       })
@@ -158,8 +161,9 @@ export default function ContactFormsPage() {
     const searchLower = searchTerm.toLowerCase()
     return (
       form.name.toLowerCase().includes(searchLower) ||
-      form.phone.includes(searchTerm) ||
-      form.subject.toLowerCase().includes(searchLower) ||
+      form.mobile.includes(searchTerm) ||
+      form.email.toLowerCase().includes(searchLower) ||
+      form.product.toLowerCase().includes(searchLower) ||
       form.message.toLowerCase().includes(searchLower)
     )
   })
@@ -179,7 +183,7 @@ export default function ContactFormsPage() {
             {/* Search */}
             <div className="flex-1 flex gap-2">
               <Input
-                placeholder="Search by name, phone, subject, or message..."
+                placeholder="Search by name, mobile, email, product, or message..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="flex-1"
@@ -199,7 +203,7 @@ export default function ContactFormsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="replied">Replied</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
                   <SelectItem value="archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
@@ -238,8 +242,9 @@ export default function ContactFormsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Subject</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Product</TableHead>
                     <TableHead>Message</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -250,8 +255,9 @@ export default function ContactFormsPage() {
                   {filteredForms.map((form) => (
                     <TableRow key={form.id}>
                       <TableCell className="font-medium">{form.name}</TableCell>
-                      <TableCell>{form.phone}</TableCell>
-                      <TableCell className="font-medium">{form.subject}</TableCell>
+                      <TableCell>{form.mobile}</TableCell>
+                      <TableCell>{form.email}</TableCell>
+                      <TableCell className="font-medium">{form.product}</TableCell>
                       <TableCell>
                         <div className="max-w-xs text-sm text-gray-600">
                           {truncateMessage(form.message, 50)}
@@ -315,12 +321,16 @@ export default function ContactFormsPage() {
                     <p className="mt-1 text-base">{selectedForm.name}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Phone</label>
-                    <p className="mt-1 text-base">{selectedForm.phone}</p>
+                    <label className="text-sm font-medium text-gray-600">Mobile</label>
+                    <p className="mt-1 text-base">{selectedForm.mobile}</p>
                   </div>
-                  <div className="col-span-2">
-                    <label className="text-sm font-medium text-gray-600">Subject</label>
-                    <p className="mt-1 text-base">{selectedForm.subject}</p>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Email</label>
+                    <p className="mt-1 text-base">{selectedForm.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Product</label>
+                    <p className="mt-1 text-base">{selectedForm.product}</p>
                   </div>
                 </div>
 
@@ -337,7 +347,7 @@ export default function ContactFormsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">New</SelectItem>
-                      <SelectItem value="replied">Replied</SelectItem>
+                      <SelectItem value="contacted">Contacted</SelectItem>
                       <SelectItem value="archived">Archived</SelectItem>
                     </SelectContent>
                   </Select>
