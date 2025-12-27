@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
-import { Phone, MapPin, Package, CreditCard, Calendar, FileText, Save, Loader2 } from 'lucide-react'
+import { Phone, MapPin, Package, Calendar, FileText, Save, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 
 interface OrderDetailsSheetProps {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { collection, doc, getDocs, query, orderBy, limit, where } from 'firebase/firestore'
+import { collection, doc, getDocs, query, orderBy, limit } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { Order } from '@/types/order'
 
@@ -14,23 +14,12 @@ export async function GET(request: NextRequest) {
     const rajaoilDocRef = doc(db, 'rajaoil', 'others')
     const ordersCollectionRef = collection(rajaoilDocRef, 'orders')
 
-    let q
-
-    // Build query based on filters
-    if (status && status !== 'all') {
-      q = query(
-        ordersCollectionRef,
-        where('status', '==', status),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      )
-    } else {
-      q = query(
-        ordersCollectionRef,
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      )
-    }
+    // Fetch all orders and filter in memory for case-insensitive status matching
+    const q = query(
+      ordersCollectionRef,
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
 
     const querySnapshot = await getDocs(q)
 
@@ -45,6 +34,14 @@ export async function GET(request: NextRequest) {
         updatedAt: data.updatedAt?.toDate().toISOString() || null
       } as Order)
     })
+
+    // Filter by status (case-insensitive)
+    if (status && status !== 'all') {
+      const statusLower = status.toLowerCase()
+      orders = orders.filter((order) =>
+        order.status?.toLowerCase() === statusLower
+      )
+    }
 
     // If search term is provided, filter in memory
     if (searchTerm) {

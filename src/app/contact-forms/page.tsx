@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Filter, RefreshCw, Eye, MessageSquare, Archive, Trash2 } from 'lucide-react'
+import { Search, Filter, RefreshCw, Eye, MessageSquare, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -101,6 +101,7 @@ export default function ContactFormsPage() {
 
   useEffect(() => {
     fetchContactForms()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
   const handleSearch = () => {
@@ -159,21 +160,6 @@ export default function ContactFormsPage() {
       toast.error('Failed to delete contact form')
     } finally {
       setIsUpdating(false)
-    }
-  }
-
-  const handleArchiveForm = async (formId: string) => {
-    try {
-      const formRef = doc(db, 'rajaoil', 'others', 'contactForm', formId)
-      await updateDoc(formRef, {
-        status: 'archived',
-        updatedAt: new Date(),
-      })
-      toast.success('Contact form archived')
-      fetchContactForms()
-    } catch (error) {
-      console.error('Error archiving form:', error)
-      toast.error('Failed to archive contact form')
     }
   }
 

@@ -129,6 +129,7 @@ export default function OthersPage() {
     if (files && files.length > 0) {
       handleFilesUpload(files)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ============= IMAGES SECTION HANDLERS =============

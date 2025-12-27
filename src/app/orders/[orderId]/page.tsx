@@ -27,6 +27,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderId
 
   useEffect(() => {
     fetchOrderDetails()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId])
 
   const fetchOrderDetails = async () => {

@@ -4,7 +4,7 @@ import * as React from "react"
 import { Package, ChevronRight, Droplet, LogOut, Settings, ShoppingBag, MessageSquare } from "lucide-react"
 import gsap from "gsap"
 import { useAuth } from "@/contexts/AuthContext"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import Link from "next/link"
 
 const menuItems = [
