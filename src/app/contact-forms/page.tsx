@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
 import { db } from '@/lib/firebase'
 import { collection, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore'
@@ -36,6 +46,8 @@ export default function ContactFormsPage() {
   const [adminNotes, setAdminNotes] = useState('')
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [formToDelete, setFormToDelete] = useState<string | null>(null)
 
   const fetchContactForms = async () => {
     try {
@@ -125,18 +137,28 @@ export default function ContactFormsPage() {
     }
   }
 
-  const handleDeleteForm = async (formId: string) => {
-    if (!confirm('Are you sure you want to delete this contact form?')) return
+  const openDeleteDialog = (formId: string) => {
+    setFormToDelete(formId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteForm = async () => {
+    if (!formToDelete) return
 
     try {
-      const formRef = doc(db, 'rajaoil', 'others', 'contactForm', formId)
+      setIsUpdating(true)
+      const formRef = doc(db, 'rajaoil', 'others', 'contactForm', formToDelete)
       await deleteDoc(formRef)
       toast.success('Contact form deleted successfully')
+      setIsDeleteDialogOpen(false)
       setIsDetailsDialogOpen(false)
+      setFormToDelete(null)
       fetchContactForms()
     } catch (error) {
       console.error('Error deleting form:', error)
       toast.error('Failed to delete contact form')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -282,7 +304,7 @@ export default function ContactFormsPage() {
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
-                            onClick={() => handleDeleteForm(form.id)}
+                            onClick={() => openDeleteDialog(form.id)}
                             variant="ghost"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
@@ -377,7 +399,7 @@ export default function ContactFormsPage() {
                 <div className="flex gap-2 justify-end pt-4 border-t">
                   <Button
                     variant="destructive"
-                    onClick={() => handleDeleteForm(selectedForm.id)}
+                    onClick={() => openDeleteDialog(selectedForm.id)}
                     disabled={isUpdating}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
@@ -402,6 +424,28 @@ export default function ContactFormsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contact Form?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this contact form submission. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isUpdating}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteForm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isUpdating}
+            >
+              {isUpdating ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

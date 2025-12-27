@@ -11,7 +11,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Search, Filter, RefreshCw, Eye } from 'lucide-react'
+import { Search, Filter, RefreshCw, Eye, Trash2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { toast } from 'sonner'
+import { db } from '@/lib/firebase'
+import { doc, deleteDoc } from 'firebase/firestore'
 
 export default function OrdersPage() {
   const router = useRouter()
@@ -21,6 +34,9 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [paymentFilter, setPaymentFilter] = useState('all')
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [orderToDelete, setOrderToDelete] = useState<Order | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchOrders = async () => {
     try {
@@ -70,6 +86,30 @@ export default function OrdersPage() {
 
   const handleViewDetails = (order: Order) => {
     router.push(`/orders/${order.id}`)
+  }
+
+  const openDeleteDialog = (order: Order) => {
+    setOrderToDelete(order)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return
+
+    try {
+      setIsDeleting(true)
+      const orderRef = doc(db, 'rajaoil', 'others', 'orders', orderToDelete.id)
+      await deleteDoc(orderRef)
+      toast.success(`Order ${orderToDelete.orderId} deleted successfully`)
+      setIsDeleteDialogOpen(false)
+      setOrderToDelete(null)
+      fetchOrders()
+    } catch (error) {
+      console.error('Error deleting order:', error)
+      toast.error('Failed to delete order')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -204,14 +244,24 @@ export default function OrdersPage() {
                       </TableCell>
                       <TableCell className="text-sm">{formatDate(order.createdAt)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleViewDetails(order)}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewDetails(order)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openDeleteDialog(order)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -221,6 +271,32 @@ export default function OrdersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {orderToDelete && (
+                <>
+                  This will permanently delete order <span className="font-semibold">{orderToDelete.orderId}</span> from {orderToDelete.customerName}. This action cannot be undone.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteOrder}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
