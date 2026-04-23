@@ -6,7 +6,6 @@ import { formatDate, getStatusColor, truncateMessage } from '@/lib/contactFormUt
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -185,129 +184,122 @@ export default function ContactFormsPage() {
       </div>
 
       {/* Filters and Search */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1 flex gap-2">
-              <Input
-                placeholder="Search by name, mobile, email, product, or message..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1"
-              />
-              <Button onClick={handleSearch} variant="outline" size="icon">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
+      <div className="flex flex-col gap-4 md:flex-row">
+        {/* Search */}
+        <div className="flex flex-1 gap-2">
+          <Input
+            placeholder="Search by name, mobile, email, product, or message..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleSearch} variant="outline" size="icon">
+            <Search className="h-4 w-4" />
+          </Button>
+        </div>
 
-            {/* Status Filter */}
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-32">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
-                  <SelectItem value="contacted">Contacted</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Status Filter */}
+        <div className="flex gap-2">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="contacted">Contacted</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
 
-              <Button onClick={fetchContactForms} variant="outline" size="icon">
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <Button onClick={fetchContactForms} variant="outline" size="icon">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
       {/* Contact Forms Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Contact Form Submissions</CardTitle>
-          <CardDescription>
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-xl font-semibold">Contact Form Submissions</h3>
+          <p className="text-sm text-muted-foreground">
             {filteredForms.length} contact form(s) found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
+          </p>
+        </div>
+
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : filteredForms.length === 0 ? (
+          <div className="py-8 text-center">
+            <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">No contact forms found</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Mobile</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>Message</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredForms.map((form) => (
+                <TableRow key={form.id}>
+                  <TableCell className="font-medium">{form.name}</TableCell>
+                  <TableCell>{form.mobile}</TableCell>
+                  <TableCell>{form.email}</TableCell>
+                  <TableCell className="font-medium">{form.product}</TableCell>
+                  <TableCell>
+                    <span className="block max-w-xs text-sm text-gray-600">
+                      {truncateMessage(form.message, 50)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(form.status)}>
+                      {form.status.charAt(0).toUpperCase() + form.status.slice(1)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-gray-500">
+                    {formatDate(form.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        onClick={() => handleViewDetails(form)}
+                        variant="ghost"
+                        size="sm"
+                        title="View details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={() => openDeleteDialog(form.id)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </div>
-          ) : filteredForms.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No contact forms found</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Mobile</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead>Message</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredForms.map((form) => (
-                    <TableRow key={form.id}>
-                      <TableCell className="font-medium">{form.name}</TableCell>
-                      <TableCell>{form.mobile}</TableCell>
-                      <TableCell>{form.email}</TableCell>
-                      <TableCell className="font-medium">{form.product}</TableCell>
-                      <TableCell>
-                        <div className="max-w-xs text-sm text-gray-600">
-                          {truncateMessage(form.message, 50)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(form.status)}>
-                          {form.status.charAt(0).toUpperCase() + form.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-500">
-                        {formatDate(form.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            onClick={() => handleViewDetails(form)}
-                            variant="ghost"
-                            size="sm"
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            onClick={() => openDeleteDialog(form.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700"
-                            title="Delete"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       {/* Details Dialog */}
       <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
@@ -364,9 +356,7 @@ export default function ContactFormsPage() {
                 {/* Message */}
                 <div>
                   <label className="text-sm font-medium text-gray-600">Message</label>
-                  <div className="mt-2 p-4 bg-gray-50 rounded-lg border">
-                    <p className="text-sm whitespace-pre-wrap text-gray-900">{selectedForm.message}</p>
-                  </div>
+                  <p className="mt-2 text-sm whitespace-pre-wrap text-gray-900">{selectedForm.message}</p>
                 </div>
 
                 {/* Admin Notes */}

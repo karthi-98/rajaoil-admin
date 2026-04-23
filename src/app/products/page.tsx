@@ -316,29 +316,29 @@ export default function ProductsPage() {
 
   return (
     <TooltipProvider>
-      <div className="space-y-6 pb-10">
+      <div className="flex flex-col gap-6 pb-10">
         {/* Page Header */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
-          <p className="text-muted-foreground">
-            Manage your oil products, brands, and categories
+        <div className="flex flex-col gap-2 border-b pb-6">
+          <h1 className="text-4xl font-semibold tracking-tight">Products</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your oil products, brands, and categories.
           </p>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <TabsList>
-              <TabsTrigger value="products" className="gap-2">
-                <Package className="h-4 w-4" />
+              <TabsTrigger value="products">
+                <Package />
                 Products
               </TabsTrigger>
-              <TabsTrigger value="brands" className="gap-2">
-                <Building2 className="h-4 w-4" />
+              <TabsTrigger value="brands">
+                <Building2 />
                 Brands
               </TabsTrigger>
-              <TabsTrigger value="categories" className="gap-2">
-                <FolderOpen className="h-4 w-4" />
+              <TabsTrigger value="categories">
+                <FolderOpen />
                 Categories
               </TabsTrigger>
             </TabsList>
@@ -354,20 +354,20 @@ export default function ProductsPage() {
           {/* Products Tab */}
           <TabsContent value="products" className="space-y-4">
             {/* Search and Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col gap-3 lg:flex-row">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search products..."
+                  placeholder="Search by product or brand..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="h-11 pl-9"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Select value={selectedBrandFilter} onValueChange={setSelectedBrandFilter}>
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="h-11 sm:w-[170px]">
                     <SelectValue placeholder="All Brands" />
                   </SelectTrigger>
                   <SelectContent>
@@ -379,7 +379,7 @@ export default function ProductsPage() {
                 </Select>
 
                 <Select value={selectedCategoryFilter} onValueChange={setSelectedCategoryFilter}>
-                  <SelectTrigger className="w-[160px]">
+                  <SelectTrigger className="h-11 sm:w-[180px]">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -393,7 +393,7 @@ export default function ProductsPage() {
                 {hasActiveFilters && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" onClick={clearFilters}>
+                      <Button variant="outline" size="icon" onClick={clearFilters} className="h-11">
                         <X className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
@@ -401,14 +401,14 @@ export default function ProductsPage() {
                   </Tooltip>
                 )}
 
-                <div className="flex border rounded-lg">
+                <div className="flex rounded-md border bg-background p-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant={viewMode === "grid" ? "secondary" : "ghost"}
                         size="icon"
                         onClick={() => setViewMode("grid")}
-                        className="rounded-r-none"
+                        className="h-9"
                       >
                         <LayoutGrid className="h-4 w-4" />
                       </Button>
@@ -421,7 +421,7 @@ export default function ProductsPage() {
                         variant={viewMode === "list" ? "secondary" : "ghost"}
                         size="icon"
                         onClick={() => setViewMode("list")}
-                        className="rounded-l-none"
+                        className="h-9"
                       >
                         <List className="h-4 w-4" />
                       </Button>
@@ -433,19 +433,22 @@ export default function ProductsPage() {
             </div>
 
             {/* Results count */}
-            {hasActiveFilters && (
+            <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
                 Showing {filteredProducts.length} of {products.length} products
               </p>
-            )}
+              {hasActiveFilters && (
+                <Badge variant="outline">Filters active</Badge>
+              )}
+            </div>
 
             {/* Products Grid/List */}
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <div className="text-center space-y-4">
+                <div className="flex flex-col items-center gap-4 text-center">
                   <div className="relative">
-                    <div className="w-12 h-12 border-4 border-primary/20 rounded-full"></div>
-                    <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                    <div className="h-12 w-12 rounded-full border-4 border-primary/20"></div>
+                    <div className="absolute left-0 top-0 h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                   </div>
                   <p className="text-muted-foreground">Loading products...</p>
                 </div>
@@ -476,7 +479,7 @@ export default function ProductsPage() {
                 )}
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredProducts.map((product) => {
                   const lowestPrice = getLowestPrice(product.types)
                   const hasOffer = product.types.some(t => t.offer)
@@ -487,8 +490,8 @@ export default function ProductsPage() {
                       href={`/products/${encodeURIComponent(product.id)}`}
                       className="group"
                     >
-                      <Card className="overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-primary/50 h-full">
-                        <div className="aspect-square w-full overflow-hidden bg-muted relative">
+                      <Card className="h-full overflow-hidden transition-all duration-200 hover:shadow-lg">
+                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                           {product.mainImage ? (
                             <img
                               src={product.mainImage}
@@ -498,44 +501,58 @@ export default function ProductsPage() {
                             />
                           ) : (
                             <div className="flex h-full w-full items-center justify-center">
-                              <Package className="h-16 w-16 text-muted-foreground/30" />
+                              <Package className="h-14 w-14 text-muted-foreground/30" />
                             </div>
                           )}
 
                           {/* Badges */}
-                          <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          <div className="absolute left-3 top-3 flex flex-col gap-1">
                             {hasOffer && (
-                              <Badge className="bg-green-500 hover:bg-green-600 text-xs">
+                              <Badge variant="secondary" className="bg-background/90">
                                 Offer
                               </Badge>
                             )}
                           </div>
 
                           {/* Variants count */}
-                          <div className="absolute bottom-2 right-2">
-                            <Badge variant="secondary" className="bg-black/60 text-white border-0 text-xs">
+                          <div className="absolute bottom-3 right-3">
+                            <Badge variant="secondary" className="bg-background/90">
                               <Layers className="h-3 w-3 mr-1" />
                               {product.types.length} variant{product.types.length !== 1 ? 's' : ''}
                             </Badge>
                           </div>
                         </div>
 
-                        <CardContent className="p-4 space-y-2">
-                          <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
-                            {product.name}
-                          </h3>
+                        <CardContent className="flex flex-col gap-3 p-4">
+                          <div className="flex flex-col gap-2">
+                            <h3 className="line-clamp-2 font-semibold transition-colors group-hover:text-primary">
+                              {product.name}
+                            </h3>
 
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Building2 className="h-3 w-3" />
-                            <span className="truncate">{product.brand || "No brand"}</span>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Building2 className="h-3 w-3" />
+                              <span className="truncate">{product.brand || "No brand"}</span>
+                              {product.category && (
+                                <>
+                                  <span>/</span>
+                                  <FolderOpen className="h-3 w-3" />
+                                  <span className="truncate">{product.category}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
 
-                          {lowestPrice && (
-                            <div className="flex items-center gap-1 text-sm font-medium text-primary">
-                              <IndianRupee className="h-3.5 w-3.5" />
-                              <span>From {lowestPrice.toLocaleString()}</span>
-                            </div>
-                          )}
+                          <div className="mt-auto flex items-center justify-between border-t pt-3">
+                            {lowestPrice ? (
+                              <div className="flex items-center gap-1 text-sm font-medium text-primary">
+                                <IndianRupee className="h-3.5 w-3.5" />
+                                <span>From {lowestPrice.toLocaleString()}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No price</span>
+                            )}
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+                          </div>
                         </CardContent>
                       </Card>
                     </Link>
@@ -543,7 +560,7 @@ export default function ProductsPage() {
                 })}
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 {filteredProducts.map((product) => {
                   const lowestPrice = getLowestPrice(product.types)
                   const hasOffer = product.types.some(t => t.offer)
@@ -554,14 +571,14 @@ export default function ProductsPage() {
                       href={`/products/${encodeURIComponent(product.id)}`}
                       className="group"
                     >
-                      <Card className="overflow-hidden transition-all duration-200 hover:shadow-md hover:border-primary/50">
-                        <div className="flex items-center gap-4 p-4">
-                          <div className="h-16 w-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                      <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
+                        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
+                          <div className="h-24 w-full overflow-hidden rounded-md bg-muted sm:h-20 sm:w-24 sm:flex-shrink-0">
                             {product.mainImage ? (
                               <img
                                 src={product.mainImage}
                                 alt={product.name}
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 loading="lazy"
                               />
                             ) : (
@@ -571,13 +588,13 @@ export default function ProductsPage() {
                             )}
                           </div>
 
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                               <div className="min-w-0">
-                                <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                                <h3 className="truncate font-semibold transition-colors group-hover:text-primary">
                                   {product.name}
                                 </h3>
-                                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Building2 className="h-3 w-3" />
                                     {product.brand || "No brand"}
@@ -595,11 +612,9 @@ export default function ProductsPage() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center gap-3 flex-shrink-0">
+                              <div className="flex items-center gap-3 lg:flex-shrink-0">
                                 {hasOffer && (
-                                  <Badge className="bg-green-500 hover:bg-green-600 text-xs">
-                                    Offer
-                                  </Badge>
+                                  <Badge variant="secondary">Offer</Badge>
                                 )}
                                 {lowestPrice && (
                                   <div className="flex items-center gap-1 text-sm font-medium text-primary">
@@ -607,7 +622,7 @@ export default function ProductsPage() {
                                     <span>From {lowestPrice.toLocaleString()}</span>
                                   </div>
                                 )}
-                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
                               </div>
                             </div>
                           </div>
@@ -624,22 +639,22 @@ export default function ProductsPage() {
           <TabsContent value="brands" className="space-y-4">
             <Card>
               <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div>
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-3">
                     <Label htmlFor="new-brand" className="text-base font-medium">Add New Brand</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground">
                       Brands help organize your products
                     </p>
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="new-brand"
                         value={newBrandName}
                         onChange={(e) => setNewBrandName(e.target.value)}
                         placeholder="Enter brand name..."
                         onKeyDown={(e) => e.key === 'Enter' && handleAddBrand()}
-                        className="max-w-sm"
+                        className="h-11 max-w-sm"
                       />
-                      <Button onClick={handleAddBrand} disabled={isAddingBrand}>
+                      <Button onClick={handleAddBrand} disabled={isAddingBrand} className="h-11">
                         {isAddingBrand ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
@@ -653,19 +668,19 @@ export default function ProductsPage() {
                   </div>
 
                   {brands.length > 0 ? (
-                    <div>
+                    <div className="flex flex-col gap-3">
                       <Label className="text-base font-medium">Existing Brands ({brands.length})</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {brands.map((brand) => {
                           const productCount = products.filter(p => p.brand === brand).length
                           return (
                             <div
                               key={brand}
-                              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+                              className="group flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="p-2 bg-purple-100 rounded-lg">
-                                  <Building2 className="h-4 w-4 text-purple-600" />
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="rounded-md bg-muted p-2">
+                                  <Building2 className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-medium text-sm truncate">{brand}</p>
@@ -678,7 +693,7 @@ export default function ProductsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => confirmDelete('brand', brand)}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -688,7 +703,7 @@ export default function ProductsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <div className="rounded-lg border border-dashed py-8 text-center">
                       <Building2 className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
                       <p className="text-muted-foreground">No brands added yet</p>
                     </div>
@@ -702,22 +717,22 @@ export default function ProductsPage() {
           <TabsContent value="categories" className="space-y-4">
             <Card>
               <CardContent className="p-6">
-                <div className="space-y-6">
-                  <div>
+                <div className="flex flex-col gap-6">
+                  <div className="flex flex-col gap-3">
                     <Label htmlFor="new-category" className="text-base font-medium">Add New Category</Label>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground">
                       Categories help customers find products
                     </p>
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="new-category"
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="Enter category name..."
                         onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-                        className="max-w-sm"
+                        className="h-11 max-w-sm"
                       />
-                      <Button onClick={handleAddCategory} disabled={isAddingCategory}>
+                      <Button onClick={handleAddCategory} disabled={isAddingCategory} className="h-11">
                         {isAddingCategory ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
@@ -731,19 +746,19 @@ export default function ProductsPage() {
                   </div>
 
                   {categories.length > 0 ? (
-                    <div>
+                    <div className="flex flex-col gap-3">
                       <Label className="text-base font-medium">Existing Categories ({categories.length})</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {categories.map((category) => {
                           const productCount = products.filter(p => p.category === category).length
                           return (
                             <div
                               key={category}
-                              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors group"
+                              className="group flex items-center justify-between rounded-lg border bg-card p-3 transition-colors hover:bg-muted/50"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="p-2 bg-amber-100 rounded-lg">
-                                  <FolderOpen className="h-4 w-4 text-amber-600" />
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="rounded-md bg-muted p-2">
+                                  <FolderOpen className="h-4 w-4 text-muted-foreground" />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="font-medium text-sm truncate">{category}</p>
@@ -756,7 +771,7 @@ export default function ProductsPage() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => confirmDelete('category', category)}
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -766,7 +781,7 @@ export default function ProductsPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                    <div className="rounded-lg border border-dashed py-8 text-center">
                       <FolderOpen className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
                       <p className="text-muted-foreground">No categories added yet</p>
                     </div>

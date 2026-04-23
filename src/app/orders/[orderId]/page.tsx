@@ -13,6 +13,7 @@ import { Phone, MapPin, Package, Calendar, FileText, Save, Loader2, ArrowLeft, T
 import { Skeleton } from '@/components/ui/skeleton'
 import Image from 'next/image'
 import { toast } from 'sonner'
+import { deleteOrderFromFirestore, fetchOrderFromFirestore, updateOrderInFirestore } from '@/lib/orderFirestore'
 
 export default function OrderDetailsPage({ params }: { params: Promise<{ orderId: string }> }) {
   const { orderId } = use(params)
@@ -33,18 +34,18 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderId
   const fetchOrderDetails = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`/api/admin/orders/${orderId}`)
-      const data = await response.json()
+      const fetchedOrder = await fetchOrderFromFirestore(orderId)
 
-      if (data.success) {
-        setOrder(data.order)
-        setStatus(data.order.status)
-        setPaymentStatus(data.order.paymentStatus)
+      if (fetchedOrder) {
+        setOrder(fetchedOrder)
+        setStatus(fetchedOrder.status)
+        setPaymentStatus(fetchedOrder.paymentStatus)
       } else {
-        console.error('Failed to fetch order:', data.error)
+        console.error('Failed to fetch order: order not found')
       }
     } catch (error) {
       console.error('Error fetching order:', error)
+      toast.error('Failed to fetch order')
     } finally {
       setLoading(false)
     }
@@ -55,31 +56,20 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderId
 
     try {
       setUpdating(true)
+      const updates: Partial<Pick<Order, 'status' | 'paymentStatus'>> = {}
 
       // Update order status if changed
       if (status !== order.status) {
-        const statusResponse = await fetch(`/api/admin/orders/${order.id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        })
-
-        if (!statusResponse.ok) {
-          throw new Error('Failed to update order status')
-        }
+        updates.status = status as Order['status']
       }
 
       // Update payment status if changed
       if (paymentStatus !== order.paymentStatus) {
-        const paymentResponse = await fetch(`/api/admin/orders/${order.id}/payment`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentStatus })
-        })
+        updates.paymentStatus = paymentStatus as Order['paymentStatus']
+      }
 
-        if (!paymentResponse.ok) {
-          throw new Error('Failed to update payment status')
-        }
+      if (Object.keys(updates).length > 0) {
+        await updateOrderInFirestore(order.id, updates)
       }
 
       // Update the local state instead of refetching
@@ -107,16 +97,7 @@ export default function OrderDetailsPage({ params }: { params: Promise<{ orderId
 
     try {
       setDeleting(true)
-
-      const response = await fetch(`/api/admin/orders/${order.id}`, {
-        method: 'DELETE'
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete order')
-      }
+      await deleteOrderFromFirestore(order.id)
 
       toast.success('Order deleted successfully', {
         description: `Order ${order.orderId} has been permanently deleted.`

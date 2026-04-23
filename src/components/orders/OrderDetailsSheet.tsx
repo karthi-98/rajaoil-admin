@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card'
 import { Phone, MapPin, Package, Calendar, FileText, Save, Loader2 } from 'lucide-react'
 import Image from 'next/image'
+import { updateOrderInFirestore } from '@/lib/orderFirestore'
 
 interface OrderDetailsSheetProps {
   order: Order
@@ -34,31 +35,20 @@ export default function OrderDetailsSheet({ order, open, onOpenChange, onUpdate 
   const handleUpdateStatus = async () => {
     try {
       setUpdating(true)
+      const updates: Partial<Pick<Order, 'status' | 'paymentStatus'>> = {}
 
       // Update order status if changed
       if (status !== order.status) {
-        const statusResponse = await fetch(`/api/admin/orders/${order.id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status })
-        })
-
-        if (!statusResponse.ok) {
-          throw new Error('Failed to update status')
-        }
+        updates.status = status
       }
 
       // Update payment status if changed
       if (paymentStatus !== order.paymentStatus) {
-        const paymentResponse = await fetch(`/api/admin/orders/${order.id}/payment`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ paymentStatus })
-        })
+        updates.paymentStatus = paymentStatus
+      }
 
-        if (!paymentResponse.ok) {
-          throw new Error('Failed to update payment status')
-        }
+      if (Object.keys(updates).length > 0) {
+        await updateOrderInFirestore(order.id, updates)
       }
 
       onUpdate()
