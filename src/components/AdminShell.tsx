@@ -12,21 +12,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isLoginPage = pathname === "/login"
 
-  if (isLoginPage) {
-    return <>{children}</>
-  }
-
   return (
-    <ProtectedRoute>
-      <NavigationProvider>
-        <SidebarProvider>
-          <CustomSidebar />
-          <SidebarInset className="relative p-8">
-            {children}
-            <NavigationLoader />
-          </SidebarInset>
-        </SidebarProvider>
-      </NavigationProvider>
-    </ProtectedRoute>
+    <NavigationProvider>
+      {isLoginPage ? (
+        children
+      ) : (
+        <ProtectedRoute>
+          <SidebarProvider>
+            <CustomSidebar />
+            <SidebarInset className="relative p-8">
+              {children}
+              <NavigationLoader />
+            </SidebarInset>
+          </SidebarProvider>
+        </ProtectedRoute>
+      )}
+    </NavigationProvider>
   )
 }

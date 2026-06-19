@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage"
-import { db, storage } from "@/lib/firebase"
+import { db } from "@/lib/firebase"
+import { MediaService } from "@/services/media.service"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Loader2,
@@ -172,56 +172,33 @@ export default function OthersPage() {
 
     try {
       const uploadPromises = imageFiles.map((file, index) => {
-        const timestamp = Date.now()
-        const randomSuffix = Math.random().toString(36).substring(7)
-        const fileName = `${timestamp}_${randomSuffix}_${file.name}`
-        const storageRef = ref(storage, `rajaoil/${fileName}`)
-        const uploadTask = uploadBytesResumable(storageRef, file)
-
-        return new Promise<string | null>((resolve) => {
-          uploadTask.on(
-            "state_changed",
-            (snapshot) => {
-              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-              setImagesUploadProgress((prev) =>
-                prev.map((item, idx) =>
-                  idx === index ? { ...item, progress } : item
-                )
-              )
-            },
-            (error) => {
-              console.error(`Error uploading ${file.name}:`, error)
-              setImagesUploadProgress((prev) =>
-                prev.map((item, idx) =>
-                  idx === index ? { ...item, status: "error" as const, progress: 0 } : item
-                )
-              )
-              resolve(null)
-            },
-            async () => {
-              try {
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-                setImagesUploadProgress((prev) =>
-                  prev.map((item, idx) =>
-                    idx === index
-                      ? { ...item, progress: 100, status: "completed" as const, downloadURL }
-                      : item
-                  )
-                )
-                resolve(downloadURL)
-              } catch (error) {
-                console.error(`Error getting download URL for ${file.name}:`, error)
-                setImagesUploadProgress((prev) =>
-                  prev.map((item, idx) =>
-                    idx === index ? { ...item, status: "error" as const } : item
-                  )
-                )
-                resolve(null)
-              }
-            }
+        return MediaService.uploadImage(file, (progress) => {
+          setImagesUploadProgress((prev) =>
+            prev.map((item, idx) =>
+              idx === index ? { ...item, progress } : item
+            )
           )
         })
-      })
+          .then((result) => {
+            setImagesUploadProgress((prev) =>
+              prev.map((item, idx) =>
+                idx === index
+                  ? { ...item, progress: 100, status: "completed" as const, downloadURL: result.url }
+                  : item
+              )
+            )
+            return result.url
+          })
+          .catch((error) => {
+            console.error(`Error uploading ${file.name}:`, error)
+            setImagesUploadProgress((prev) =>
+              prev.map((item, idx) =>
+                idx === index ? { ...item, status: "error" as const, progress: 0 } : item
+              )
+            )
+            return null
+          })
+        })
 
       const uploadResults = await Promise.all(uploadPromises)
       const uploadedURLs = uploadResults.filter((url): url is string => url !== null)
@@ -246,6 +223,15 @@ export default function OthersPage() {
     setDeleteConfirmOpen(true)
   }
 
+  const deleteImageFromStorage = async (imageUrl: string) => {
+    if (MediaService.isCdnUrl(imageUrl)) {
+      await MediaService.deleteImage(imageUrl)
+      return
+    }
+
+    throw new Error("Only R2 CDN media can be deleted from storage")
+  }
+
   const handleDeleteImage = async () => {
     if (deleteTarget.type !== 'single' || deleteTarget.index === undefined) return
 
@@ -254,15 +240,9 @@ export default function OthersPage() {
       const imageUrl = images[index]
 
       try {
-        const decodedUrl = decodeURIComponent(imageUrl)
-        const pathMatch = decodedUrl.match(/\/o\/(.+?)\?/)
-        if (pathMatch && pathMatch[1]) {
-          const filePath = pathMatch[1]
-          const storageRef = ref(storage, filePath)
-          await deleteObject(storageRef)
-        }
+        await deleteImageFromStorage(imageUrl)
       } catch (storageError) {
-        console.error("Error deleting from storage:", storageError)
+        console.error("Error deleting from R2:", storageError)
       }
 
       const updatedImages = images.filter((_, i) => i !== index)
@@ -325,13 +305,7 @@ export default function OthersPage() {
         const imageUrl = images[index]
 
         try {
-          const decodedUrl = decodeURIComponent(imageUrl)
-          const pathMatch = decodedUrl.match(/\/o\/(.+?)\?/)
-          if (pathMatch && pathMatch[1]) {
-            const filePath = pathMatch[1]
-            const storageRef = ref(storage, filePath)
-            await deleteObject(storageRef)
-          }
+          await deleteImageFromStorage(imageUrl)
 
           setImagesDeleteProgress((prev) =>
             prev.map((item, idx) =>
@@ -519,6 +493,10 @@ export default function OthersPage() {
 
   const getFileNameFromUrl = (url: string): string => {
     try {
+      if (MediaService.isCdnUrl(url)) {
+        return MediaService.getFileNameFromUrl(url)
+      }
+
       const decodedUrl = decodeURIComponent(url)
       const pathMatch = decodedUrl.match(/\/o\/(.+?)\?/)
       if (pathMatch && pathMatch[1]) {

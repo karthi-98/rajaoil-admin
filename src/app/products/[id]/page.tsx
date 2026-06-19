@@ -21,7 +21,8 @@ import {
   FolderOpen,
   Tag,
   ChevronRight,
-  Layers
+  Layers,
+  Upload
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useRouter } from "next/navigation"
@@ -29,6 +30,7 @@ import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import { MediaService } from "@/services/media.service"
 
 interface OilType {
   name: string
@@ -66,6 +68,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [brands, setBrands] = useState<string[]>([])
   const [categories, setCategories] = useState<string[]>([])
   const [isUpdating, setIsUpdating] = useState(false)
+  const [mainImageUploading, setMainImageUploading] = useState(false)
+  const [newVariantImageUploading, setNewVariantImageUploading] = useState(false)
+  const [editVariantImageUploading, setEditVariantImageUploading] = useState(false)
 
   // Form state
   const [brand, setBrand] = useState("")
@@ -133,8 +138,51 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     setIsEditDialogOpen(true)
   }
 
+  const isR2ImageUrl = (url: string) => {
+    return !url.trim() || MediaService.isCdnUrl(url.trim())
+  }
+
+  const uploadImageToR2 = async (
+    file: File,
+    setImageUrl: (url: string) => void,
+    setUploading: (uploading: boolean) => void
+  ) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file")
+      return
+    }
+
+    setUploading(true)
+    try {
+      const result = await MediaService.uploadImage(file)
+      setImageUrl(result.url)
+      toast.success("Image uploaded to R2")
+    } catch (error) {
+      console.error("Error uploading image to R2:", error)
+      toast.error("Failed to upload image")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleImageFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setImageUrl: (url: string) => void,
+    setUploading: (uploading: boolean) => void
+  ) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    uploadImageToR2(file, setImageUrl, setUploading)
+  }
+
   const handleUpdateProduct = async () => {
     if (!product) return
+    if (!isR2ImageUrl(mainImage)) {
+      toast.error("Main image must be uploaded to R2")
+      return
+    }
 
     setIsUpdating(true)
     try {
@@ -159,6 +207,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (!product) return
     if (!newVariantName.trim() || !newVariantPrice.trim()) {
       toast.error("Please enter both name and price")
+      return
+    }
+    if (!isR2ImageUrl(newVariantImage)) {
+      toast.error("Variant image must be uploaded to R2")
       return
     }
 
@@ -200,6 +252,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
   const handleUpdateVariant = async () => {
     if (!product || editingVariantIndex === null) return
+    if (!isR2ImageUrl(editVariantImage)) {
+      toast.error("Variant image must be uploaded to R2")
+      return
+    }
 
     setIsUpdating(true)
     try {
@@ -581,11 +637,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Main Image URL</Label>
+              <Label>Main Image</Label>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="main-image-upload"
+                onChange={(event) =>
+                  handleImageFileChange(event, setMainImage, setMainImageUploading)
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start gap-2"
+                disabled={mainImageUploading}
+                onClick={() => document.getElementById("main-image-upload")?.click()}
+              >
+                {mainImageUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {mainImageUploading ? "Uploading to R2..." : "Upload to R2"}
+              </Button>
               <Input
                 value={mainImage}
                 onChange={(e) => setMainImage(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://cdnoil.karthick.xyz/rajaoil/..."
               />
               {mainImage && (
                 <div className="mt-2 rounded-lg overflow-hidden border">
@@ -658,11 +737,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Image URL</Label>
+              <Label>Image</Label>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="new-variant-image-upload"
+                onChange={(event) =>
+                  handleImageFileChange(event, setNewVariantImage, setNewVariantImageUploading)
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start gap-2"
+                disabled={newVariantImageUploading}
+                onClick={() => document.getElementById("new-variant-image-upload")?.click()}
+              >
+                {newVariantImageUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {newVariantImageUploading ? "Uploading to R2..." : "Upload to R2"}
+              </Button>
               <Input
                 value={newVariantImage}
                 onChange={(e) => setNewVariantImage(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://cdnoil.karthick.xyz/rajaoil/..."
               />
               {newVariantImage && (
                 <div className="mt-2 rounded-lg overflow-hidden border">
@@ -732,11 +834,34 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             </div>
 
             <div className="space-y-2">
-              <Label>Image URL</Label>
+              <Label>Image</Label>
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="edit-variant-image-upload"
+                onChange={(event) =>
+                  handleImageFileChange(event, setEditVariantImage, setEditVariantImageUploading)
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start gap-2"
+                disabled={editVariantImageUploading}
+                onClick={() => document.getElementById("edit-variant-image-upload")?.click()}
+              >
+                {editVariantImageUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {editVariantImageUploading ? "Uploading to R2..." : "Upload to R2"}
+              </Button>
               <Input
                 value={editVariantImage}
                 onChange={(e) => setEditVariantImage(e.target.value)}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://cdnoil.karthick.xyz/rajaoil/..."
               />
               {editVariantImage && (
                 <div className="mt-2 rounded-lg overflow-hidden border">
